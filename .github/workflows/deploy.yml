@@ -1,0 +1,49 @@
+name: production deploy
+
+on: deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://geomaniac.ru
+    steps:
+      - name: executing ssh deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_HOST_USERNAME }}
+          key: ${{ secrets.DEPLOY_HOST_SSH_PRIVATE_KEY }}
+          script: |
+            eval `ssh-agent -s`
+            ssh-add ${{ secrets.DEPLOY_HOST_PATH_TO_SSH_PRIVATE_KEY_FOR_GITHUB }}
+
+            cd ${{ secrets.DEPLOY_HOST_PROJECT_PATH }}
+
+            cd frontend
+            git reset --hard && git checkout master
+
+            cd ..
+            git reset --hard && git checkout master
+
+            cd backend
+            git reset --hard && git checkout master
+
+            cd ..
+
+            git pull --recurse-submodules -r -f
+            git submodule update --recursive -f
+
+            sed -i "s/DOMAIN_PLACEHOLDER/${{ secrets.DOMAIN }}/" .docker/.prod.env
+            sed -i "s/DOMAIN_ADMIN_EMAIL_PLACEHOLDER/${{ secrets.DOMAIN_ADMIN_EMAIL }}/" .docker/.prod.env
+
+            sed -i "s/TRAEFIK_USERNAME_PLACEHOLDER/${{ secrets.TRAEFIK_USERNAME }}/" .docker/.prod.env
+            sed -i "s/TRAEFIK_PASSWORD_PLACEHOLDER/${{ secrets.TRAEFIK_PASSWORD }}/" .docker/.prod.env
+
+            sed -i "s/localhost/${{ secrets.DOMAIN }}/" ./frontend/.env
+
+            sudo docker network create a-traefik-public
+            bash && sudo bash ./.docker/compose.sh prod up
+
+            sudo docker exec backend sh ./.scripts/init-db.sh

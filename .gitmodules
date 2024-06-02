@@ -1,0 +1,8 @@
+[submodule "frontend"]
+	path = frontend
+	url = ../geomaniac-frontend.git
+	branch = master
+[submodule "backend"]
+	path = backend
+	url = ../geomaniac-backend.git
+	branch = master
