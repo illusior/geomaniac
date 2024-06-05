@@ -22,13 +22,13 @@ jobs:
             cd ${{ secrets.DEPLOY_HOST_PROJECT_PATH }}
 
             cd frontend
-            git reset --hard && git checkout master
+            git reset --hard && git checkout deployment
 
             cd ..
-            git reset --hard && git checkout master
+            git reset --hard && git checkout deployment
 
             cd backend
-            git reset --hard && git checkout master
+            git reset --hard && git checkout deployment
 
             cd ..
 
